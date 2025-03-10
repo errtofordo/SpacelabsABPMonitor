@@ -550,6 +550,38 @@ int SendBioData(HANDLE hDev)
 
 int Init(int argc, char* argv[])
 {
+	std::map<std::string, int> argMap
+	{
+		{"-d", 3},
+		{"-n", 2},
+	};
+
+	if (argc >= 4 && argc <= 6) 
+	{
+		for (int i = 2; i < argc; i += 2) 
+		{
+			try 
+			{
+				int value = atoi(argv[i + 1]);
+
+				if (value <= 0 || value > 3) 
+				{
+					std::cerr << "Error: Invalid value for argument: " << argv[i]
+						<< ". Expected 1 to 3." << std::endl;
+						return 1;
+				}
+
+				argMap.at(argv[i]) = value;
+			}
+			catch (const std::exception&) 
+			{
+				std::cerr << "Error: Invalid argument: " << argv[i]
+					<< ". Expected -d <number> or -n <number>." << std::endl;
+					return 1;
+			}
+		}
+	}
+
 	HANDLE hDev = ConnectToDevice();
 	if (hDev == INVALID_HANDLE_VALUE)
 	{
@@ -595,8 +627,11 @@ int Init(int argc, char* argv[])
 		printf("OK\n");
 	}
 
-	CycleTimeInformation* info = CreateCycleTimeInformation(6, 22, 3, 1);
-	InsertCycleTimeInformation(info, 22, 6, 1, 0);
+	int d = argMap["-d"];
+	int n = argMap["-n"];
+
+	CycleTimeInformation* info = CreateCycleTimeInformation(6, 22, d, 1);
+	InsertCycleTimeInformation(info, 22, 6, n, 0);
 
 	printf("Sending cycle time information: \n");
 	if (SendCycleTimeInfo(hDev, info)) 
